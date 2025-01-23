@@ -1,0 +1,171 @@
+import 'package:flutter/gestures.dart';
+import 'package:arabic_dictionay/dict/parse.dart';
+import 'package:flutter/material.dart';
+
+const t =
+    ' طَائِرُ السُّمَّانِ بوب وايت يَكُدُّ فِي عَمَلِهِ؛ وَلِهَذَا فَهُوَ دَائِمُ الِانْشِغَالِ، كَمَا أَنَّ لَدَيْهِ الْكَثِيرَ مِنَ الْأَصْدِقَاءِ، وَلَكِنْ عِنْدَمَا عَزَمَ عَلَى أَنْ يَبْنِيَ عُشًّا جَدِيدًا، لِمَاذَا قَرَّرَ أَنْ يُبْقِيَ مَكَانَهُ سِرًّا وَيُخْفِيَهُ عَنِ الْآخَرِينَ؟ وَلِمَاذَا اخْتَارَتْ زَوْجَتُهُ ذَلِكَ الْمَوْقِعَ الْخَطِيرَ لِتَبْنِيَ الْعُشَّ؟ ثُمَّ لِمَاذَا كَانَ عَلَى الْأَرْنَبِ بيتر وَزَوْجَتِهِ تَوَخِّي الْحَذَرِ عِنْدَمَا جَاءَتِ السَّيِّدَةُ بوب وايت لِزِيَارَتِهِمَا؟ وَلِمَاذَا أَحَبَّ ابْنُ الْمُزَارِعِ براون بوب وايت وَعَائِلَتَهُ؟ وَكَيْفَ نَجَحَ فِي إِنْقَاذِهِمْ مِنَ الصَّيَّادِينَ؟ تَعَرَّفْ عَلَى إِجَابَاتِ كُلِّ هَذِهِ الْأَسْئِلَةِ فِي هَذَا الْكِتَابِ الشَّائِقِ.  ';
+
+Dictionary dict = Dictionary();
+void main() {
+  runApp(const MyApp());
+}
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  // This widget is the root of your application.
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Arabic Dictionary',
+      theme: ThemeData(
+        // This is the theme of your application.
+        //
+        // TRY THIS: Try running your application with "flutter run". You'll see
+        // the application has a purple toolbar. Then, without quitting the app,
+        // try changing the seedColor in the colorScheme below to Colors.green
+        // and then invoke "hot reload" (save your changes or press the "hot
+        // reload" button in a Flutter-supported IDE, or press "r" if you used
+        // the command line to start the app).
+        //
+        // Notice that the counter didn't reset back to zero; the application
+        // state is not lost during the reload. To reset the state, use hot
+        // restart instead.
+        //
+        // This works for code too, not just values: Most code changes can be
+        // tested with just a hot reload.
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        useMaterial3: true,
+      ),
+      home: const MyHomePage(title: 'Arabic dict'),
+    );
+  }
+}
+
+class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key, required this.title});
+
+  // This widget is the home page of your application. It is stateful, meaning
+  // that it has a State object (defined below) that contains fields that affect
+  // how it looks.
+
+  // This class is the configuration for the state. It holds the values (in this
+  // case the title) provided by the parent (in this case the App widget) and
+  // used by the build method of the State. Fields in a Widget subclass are
+  // always marked "final".
+
+  final String title;
+
+  @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+  final inputControler = TextEditingController(text: t);
+  int selected = -1;
+
+  List<WordAndEntries>? pera;
+
+  @override
+  void dispose() {
+    inputControler.dispose();
+    super.dispose();
+  }
+
+  void _findWords() {
+    setState(() {
+      if (dict.err.isNotEmpty) {
+        var e = dict.err;
+        print('while loading: $e');
+      } else {
+        pera = dict.findWords(inputControler.text.trim());
+      }
+    });
+  }
+
+  var messages = ['msg1'];
+  TextStyle defaultStyle = TextStyle(color: Colors.grey, fontSize: 20.0);
+  TextStyle linkStyle = TextStyle(color: Colors.blue);
+
+  @override
+  Widget build(BuildContext context) {
+    // This method is rerun every time setState is called, for instance as done
+    // by the _incrementCounter method above.
+    //
+    // The Flutter framework has been optimized to make rerunning build methods
+    // fast, so that you can just rebuild anything that needs updating rather
+    // than having to individually change instances of widgets.
+    return Scaffold(
+      appBar: AppBar(
+        // TRY THIS: Try changing the color here to a specific color (to
+        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
+        // change color while the other colors stay the same.
+        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
+        // Here we take the value from the MyHomePage object that was created by
+        // the App.build method, and use it to set our appbar title.
+        title: Text(widget.title),
+      ),
+      body: Column(
+        children: <Widget>[
+          Expanded(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.vertical,
+              child: RichText(
+                text: TextSpan(
+                  style: defaultStyle,
+                  children: messages.map((v) {
+                    return TextSpan(
+                      text: "${v.trim()} ",
+                      style: defaultStyle,
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+          ),
+          Container(
+              padding: EdgeInsets.symmetric(vertical: 2.0),
+              child: Row(mainAxisAlignment: MainAxisAlignment.end, children: [
+                // First child is enter comment text input
+                Expanded(
+                  child: TextField(
+                    onSubmitted: (v) {
+                      for (int i = 0; i < 1000; i++) {
+                        messages.add('$i');
+                      }
+                      setState(() {
+                        messages.add(v);
+                      });
+                    },
+                    autocorrect: false,
+                    decoration: InputDecoration(
+                      labelText: "Some Text",
+                      labelStyle:
+                          TextStyle(fontSize: 20.0, color: Colors.white),
+                      fillColor: Colors.blue,
+                      border: OutlineInputBorder(
+                          // borderRadius:
+                          //     BorderRadius.all(Radius.zero(5.0)),
+                          borderSide: BorderSide(color: Colors.purpleAccent)),
+                    ),
+                  ),
+                ),
+                // Second child is button
+                IconButton(
+                  icon: Icon(Icons.send),
+                  iconSize: 20.0,
+                  onPressed: () {},
+                )
+              ])),
+        ],
+      ),
+
+      // floatingActionButton: FloatingActionButton(
+
+      //   onPressed: _incrementCounter,
+      //   tooltip: 'Increment',
+      //   child: const Icon(Icons.add),
+      // ), // This trailing comma makes auto-formatting nicer for build methods.
+    );
+  }
+}

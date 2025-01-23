@@ -1,0 +1,53 @@
+name: arabic_dictionay
+description: "English to Arabic dictionay"
+publish_to: 'none' # Remove this line if you wish to publish to pub.dev
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.6.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  cupertino_icons: ^1.0.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+  flutter_launcher_icons: "^0.14.2"
+
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/data/dictprefixes
+    - assets/data/dictstems
+    - assets/data/dictsuffixes
+    - assets/data/tableab
+    - assets/data/tableac
+    - assets/data/tablebc
+    - assets/icons/icon.png
+  fonts:
+    - family: Amiri
+      fonts:
+        - asset: assets/Amiri-Regular.ttf
+
+# flutter pub get
+# dart run flutter_launcher_icons
+flutter_launcher_icons:
+  android: "launcher_icon"
+  # ios: true
+  image_path: "assets/icons/icon.png"
+  min_sdk_android: 24 # android min sdk min:16, default 21
+  adaptive_icon_background: "#ffffffff"
+  adaptive_icon_foreground: "assets/icons/icon.png"
+  # windows:
+  #   generate: true
+  #   image_path: "assets/icons/icon.png"
+  #   icon_size: 48 # min:48, max:256, default: 48
+
