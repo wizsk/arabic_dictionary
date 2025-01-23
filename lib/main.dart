@@ -1,7 +1,8 @@
 import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:flutter/material.dart';
 
-Dictionary dict = Dictionary();
+final darkNotifier = ValueNotifier<bool>(false);
+var firstRun = true;
 
 void main() {
   runApp(const MyApp());
@@ -13,35 +14,53 @@ class MyApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Arabic Dictionary',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-        textTheme: Theme.of(context).textTheme.apply(
-              fontFamily: 'Amiri',
-              fontSizeFactor: 1.1,
-              fontSizeDelta: 2.0,
+    return ValueListenableBuilder(
+        valueListenable: darkNotifier,
+        builder: (BuildContext context, bool isDark, Widget? child) {
+          // when running for the 1st time then get the theme
+          if (firstRun) {
+            darkNotifier.value =
+                MediaQuery.of(context).platformBrightness == Brightness.dark;
+            firstRun = false;
+          }
+
+          return MaterialApp(
+            title: 'Arabic Dictionary',
+            // TODO: Learn more about theme maybe and improve it :?
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              useMaterial3: true,
+              textTheme: Theme.of(context).textTheme.apply(
+                    fontFamily: 'Amiri',
+                    fontSizeFactor: 1.1,
+                    fontSizeDelta: 2.0,
+                    bodyColor: null,
+                    displayColor: null,
+                  ),
             ),
-      ),
-      home: const MyHomePage(
-        title: 'Arabic Dictionary',
-      ),
-    );
+            darkTheme: ThemeData(
+              brightness: Brightness.dark,
+              primaryColor: Colors.white,
+              useMaterial3: true,
+              textTheme: Theme.of(context).textTheme.apply(
+                    fontFamily: 'Amiri',
+                    fontSizeFactor: 1.1,
+                    fontSizeDelta: 2.0,
+                    bodyColor: Colors.white,
+                    displayColor: Colors.white,
+                  ),
+            ),
+            themeMode: darkNotifier.value ? ThemeMode.dark : ThemeMode.light,
+            home: const MyHomePage(
+              title: 'Arabic Dictionary',
+            ),
+          );
+        });
   }
 }
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
-
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
-
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
 
   final String title;
 
@@ -51,7 +70,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final inputControler = TextEditingController();
-  int selected = -1;
+  final dict = Dictionary();
 
   List<Entry>? _currentWord;
 
@@ -69,12 +88,6 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget _makeWordTable() {
-    // if (!dict.loaded) {
-    //   return Text(
-    //     'Parsing Dictionary data plase wait and try again',
-    //     textAlign: TextAlign.center,
-    //   );
-    // }
     if (_currentWord == null) {
       return Text(
         'Search for something',
@@ -159,6 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 IconButton(
                   onPressed: _findWords,
                   icon: Icon(Icons.search),
+                  iconSize: 30,
                 ),
               ],
             ),
@@ -166,12 +180,44 @@ class _MyHomePageState extends State<MyHomePage> {
           ],
         ),
       ),
-      // floatingActionButton: FloatingActionButton(
-
-      //   onPressed: _incrementCounter,
-      //   tooltip: 'Increment',
-      //   child: const Icon(Icons.add),
-      // ), // This trailing comma makes auto-formatting nicer for build methods.
+      drawer: Drawer(
+        child: ListView(
+          // Important: Remove any padding from the ListView.
+          padding: EdgeInsets.zero,
+          children: [
+            const DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.deepPurple,
+              ),
+              child: Text(
+                'Main menu',
+                style: TextStyle(
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            ListTile(
+              title: Row(
+                children: [
+                  Text('Theme:'),
+                  SizedBox(
+                    width: 10,
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      darkNotifier.value ? Icons.wb_sunny : Icons.bubble_chart,
+                    ),
+                    iconSize: 30,
+                    onPressed: () {
+                      darkNotifier.value = !darkNotifier.value;
+                    },
+                  )
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
