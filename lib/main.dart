@@ -1,8 +1,9 @@
 import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:flutter/material.dart';
 
-final darkNotifier = ValueNotifier<bool>(false);
+final darkNotifier = ValueNotifier<bool>(true);
 var firstRun = true;
+var firstRunThemeTgl = true;
 
 void main() {
   runApp(const MyApp());
@@ -17,14 +18,7 @@ class MyApp extends StatelessWidget {
     return ValueListenableBuilder(
         valueListenable: darkNotifier,
         builder: (BuildContext context, bool isDark, Widget? child) {
-          // when running for the 1st time then get the theme
-          if (firstRun) {
-            darkNotifier.value =
-                MediaQuery.of(context).platformBrightness == Brightness.dark;
-            firstRun = false;
-          }
-
-          return MaterialApp(
+          var app = MaterialApp(
             title: 'Arabic Dictionary',
             // TODO: Learn more about theme maybe and improve it :?
             theme: ThemeData(
@@ -50,11 +44,17 @@ class MyApp extends StatelessWidget {
                     displayColor: Colors.white,
                   ),
             ),
-            themeMode: darkNotifier.value ? ThemeMode.dark : ThemeMode.light,
+            themeMode: firstRun
+                ? ThemeMode.system
+                : darkNotifier.value
+                    ? ThemeMode.dark
+                    : ThemeMode.light,
             home: const MyHomePage(
               title: 'Arabic Dictionary',
             ),
           );
+          firstRun = false;
+          return app;
         });
   }
 }
@@ -131,6 +131,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -205,11 +206,21 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   IconButton(
                     icon: Icon(
-                      darkNotifier.value ? Icons.wb_sunny : Icons.bubble_chart,
+                      isDarkMode ? Icons.wb_sunny : Icons.bubble_chart,
                     ),
                     iconSize: 30,
                     onPressed: () {
-                      darkNotifier.value = !darkNotifier.value;
+                      if (firstRunThemeTgl) {
+                        final nv = !isDarkMode;
+                        if (nv == darkNotifier.value) {
+                          // if the value was the same then change twise :D
+                          darkNotifier.value = !nv;
+                        }
+                        darkNotifier.value = nv;
+                        firstRunThemeTgl = false;
+                      } else {
+                        darkNotifier.value = !darkNotifier.value;
+                      }
                     },
                   )
                 ],
