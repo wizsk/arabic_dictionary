@@ -184,6 +184,9 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
       ),
       drawer: Drawer(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.zero, // Removes the border radius
+        ),
         child: ListView(
           // Important: Remove any padding from the ListView.
           padding: EdgeInsets.zero,
