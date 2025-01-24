@@ -78,20 +78,15 @@ class Dictionary {
     loadData();
   }
 
-  List<WordAndEntries> findWords(String pera) {
+  Future<List<WordAndEntries>> findWords(String pera) async {
     return pera.trim().split(' ').map((w) => w.trim()).toList().map((w) {
       var c = WordAndEntries(word: w, entries: findWord(w));
       // print('$w, $c');
       return c;
     }).toList();
-    // return pera
-    //     .trim()
-    //     .split(' ')
-    //     .map((w) => w.trim())
-    //     .toList()
-    //     .map((w) => WordAndEntries(word: w, entries: _dict.findWord(w)))
-    //     .toList();
   }
+
+  Future<List<Entry>> findWordAsync(String word) async => findWord(word);
 
   // Method to find word
   List<Entry> findWord(String word) {

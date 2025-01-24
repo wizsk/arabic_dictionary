@@ -81,9 +81,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _findWords() {
-    setState(() {
-      if (inputControler.text.trim().isEmpty) return;
-      _currentWord = dict.findWord(inputControler.text.trim());
+    if (inputControler.text.trim().isEmpty) return;
+    dict.findWordAsync(inputControler.text.trim()).then((w) {
+      setState(() {
+        _currentWord = w;
+      });
     });
   }
 
