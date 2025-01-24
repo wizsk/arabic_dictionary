@@ -223,7 +223,7 @@ class Dictionary {
     String root = '';
     String family = '';
     for (var line in lines) {
-      if (line.startsWith(';;')) {
+      if (line.trim() == ';') {
         root = '';
         family = '';
       } else if (line.startsWith(';--- ')) {

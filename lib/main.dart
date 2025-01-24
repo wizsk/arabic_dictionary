@@ -95,7 +95,7 @@ class _MyHomePageState extends State<MyHomePage> {
       );
     } else if (_currentWord!.isEmpty) {
       return Text(
-        'No resust for: ${inputControler.text}',
+        'No result for: ${inputControler.text}',
         textAlign: TextAlign.center,
       );
     }
