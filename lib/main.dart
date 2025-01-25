@@ -74,7 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _findWords() {
+  void _findWords() async {
     if (inputControler.text.trim().isEmpty) return;
     dict.findWordAsync(inputControler.text.trim()).then((w) {
       setState(() {
@@ -207,18 +207,22 @@ class _MyHomePageState extends State<MyHomePage> {
                       currentTheme.value == ThemeMode.system
                           ? 'System'
                           : currentTheme.value == ThemeMode.dark
-                              ? 'Light'
-                              : 'Dark',
+                              ? 'Dark'
+                              : 'Light',
                     ),
                     icon: Icon(
                       currentTheme.value == ThemeMode.system
                           ? Icons.contrast
                           : currentTheme.value == ThemeMode.dark
-                              ? Icons.light_mode
-                              : Icons.dark_mode,
+                              ? Icons.dark_mode
+                              : Icons.light_mode,
                       size: 30,
                     ),
                     onPressed: () async {
+                      // TODO: Handle when theme changed
+                      // var currentBrightness =
+                      //     MediaQuery.of(context).platformBrightness;
+
                       if (currentTheme.value == ThemeMode.system) {
                         if (Theme.of(context).brightness == Brightness.dark) {
                           currentTheme.value = ThemeMode.light;
