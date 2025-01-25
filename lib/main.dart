@@ -1,9 +1,9 @@
 import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:flutter/material.dart';
 
-final darkNotifier = ValueNotifier<bool>(true);
-var firstRun = true;
-var firstRunThemeTgl = true;
+final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
+// when it's value is == 1 then switch to system theme
+int currentThemeSwitchCount = 0;
 
 void main() {
   runApp(const MyApp());
@@ -16,9 +16,9 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ValueListenableBuilder(
-        valueListenable: darkNotifier,
-        builder: (BuildContext context, bool isDark, Widget? child) {
-          var app = MaterialApp(
+        valueListenable: currentTheme,
+        builder: (BuildContext context, ThemeMode th, Widget? child) {
+          return MaterialApp(
             title: 'Arabic Dictionary',
             // TODO: Learn more about theme maybe and improve it :?
             theme: ThemeData(
@@ -44,17 +44,11 @@ class MyApp extends StatelessWidget {
                     displayColor: Colors.white,
                   ),
             ),
-            themeMode: firstRun
-                ? ThemeMode.system
-                : darkNotifier.value
-                    ? ThemeMode.dark
-                    : ThemeMode.light,
+            themeMode: th,
             home: const MyHomePage(
               title: 'Arabic Dictionary',
             ),
           );
-          firstRun = false;
-          return app;
         });
   }
 }
@@ -133,7 +127,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
@@ -209,22 +202,46 @@ class _MyHomePageState extends State<MyHomePage> {
                   SizedBox(
                     width: 10,
                   ),
-                  IconButton(
-                    icon: Icon(
-                      isDarkMode ? Icons.wb_sunny : Icons.bubble_chart,
+                  TextButton.icon(
+                    label: Text(
+                      currentTheme.value == ThemeMode.system
+                          ? 'System'
+                          : currentTheme.value == ThemeMode.dark
+                              ? 'Light'
+                              : 'Dark',
                     ),
-                    iconSize: 30,
-                    onPressed: () {
-                      if (firstRunThemeTgl) {
-                        final nv = !isDarkMode;
-                        if (nv == darkNotifier.value) {
-                          // if the value was the same then change twise :D
-                          darkNotifier.value = !nv;
+                    icon: Icon(
+                      currentTheme.value == ThemeMode.system
+                          ? Icons.contrast
+                          : currentTheme.value == ThemeMode.dark
+                              ? Icons.light_mode
+                              : Icons.dark_mode,
+                      size: 30,
+                    ),
+                    onPressed: () async {
+                      if (currentTheme.value == ThemeMode.system) {
+                        if (Theme.of(context).brightness == Brightness.dark) {
+                          currentTheme.value = ThemeMode.light;
+                        } else {
+                          currentTheme.value = ThemeMode.dark;
                         }
-                        darkNotifier.value = nv;
-                        firstRunThemeTgl = false;
+                        currentThemeSwitchCount++;
+                      } else if (currentTheme.value == ThemeMode.light) {
+                        if (currentThemeSwitchCount == 1) {
+                          currentTheme.value = ThemeMode.system;
+                          currentThemeSwitchCount = 0;
+                        } else {
+                          currentTheme.value = ThemeMode.dark;
+                          currentThemeSwitchCount++;
+                        }
                       } else {
-                        darkNotifier.value = !darkNotifier.value;
+                        if (currentThemeSwitchCount == 1) {
+                          currentTheme.value = ThemeMode.system;
+                          currentThemeSwitchCount = 0;
+                        } else {
+                          currentTheme.value = ThemeMode.light;
+                          currentThemeSwitchCount++;
+                        }
                       }
                     },
                   )
