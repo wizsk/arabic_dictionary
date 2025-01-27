@@ -44,11 +44,32 @@ class Entry {
       pos: json['pos'] ?? '',
     );
   }
+  Map<String, dynamic> toJson() => {
+        'root': root,
+        'word': word,
+        'morph': morph,
+        'def': def,
+        'family': fam,
+        'pos': pos,
+      };
 
   @override
   String toString() {
     return 'Entry(root: $root, word: $word, def: $def)';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      other is Entry &&
+      other.root == root &&
+      other.word == word &&
+      other.morph == morph &&
+      other.def == def &&
+      other.fam == fam &&
+      other.pos == pos;
+
+  @override
+  int get hashCode => Object.hash(root, word, morph, def, fam, pos);
 }
 
 class WordAndEntries {

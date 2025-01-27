@@ -1,11 +1,35 @@
 import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
+Future<void> saveEntries() async {
+  final prefs = await SharedPreferences.getInstance();
+  await prefs.setString(
+      'entries', jsonEncode(_bookMarks!.map((e) => e.toJson()).toList()));
+}
+
+const paddingLTR = 8.0;
+const paddingB = 18.0;
+
+List<Entry>? _bookMarks;
+Future<void> loadEntriesToBookMark() async {
+  final prefs = await SharedPreferences.getInstance();
+  final entriesJson = prefs.getString('entries');
+  if (entriesJson == null) _bookMarks = [];
+
+  _bookMarks = (jsonDecode(entriesJson!) as List)
+      .map((json) => Entry.fromJson(json))
+      .toList();
+}
+
+List<Entry>? _currentWord;
 final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
 // when it's value is == 1 then switch to system theme
 int currentThemeSwitchCount = 0;
 
 void main() {
+  loadEntriesToBookMark();
   runApp(const MyApp());
 }
 
@@ -66,8 +90,6 @@ class _MyHomePageState extends State<MyHomePage> {
   final inputControler = TextEditingController();
   final dict = Dictionary();
 
-  List<Entry>? _currentWord;
-
   @override
   void dispose() {
     inputControler.dispose();
@@ -104,26 +126,46 @@ class _MyHomePageState extends State<MyHomePage> {
           DataColumn(label: Text('Word')),
           DataColumn(label: Text('Definition')),
           DataColumn(label: Text('Root')),
+          DataColumn(label: Text('Bookmark')),
           // DataColumn(label: Text('Family')),
         ],
-        rows: _currentWord!
-            .map(
-              (e) => DataRow(
-                cells: [
-                  DataCell(Text(e.word)),
-                  DataCell(Text(e.def)),
-                  DataCell(Text(e.root)),
-                  // DataCell(Text(e.fam)),
-                ],
+        rows: _currentWord!.map((e) {
+          final indexOf = _bookMarks?.indexOf(e);
+          return DataRow(
+            cells: [
+              DataCell(Text(e.word)),
+              DataCell(Text(e.def)),
+              DataCell(Text(e.root)),
+              DataCell(
+                IconButton(
+                  icon: Icon(
+                    indexOf != null && indexOf > -1
+                        ? Icons.favorite
+                        : Icons.favorite_border,
+                  ),
+                  color: Colors.red,
+                  onPressed: () {
+                    if (_bookMarks == null) {
+                      return;
+                    }
+                    setState(() {
+                      if (indexOf != null && indexOf! > -1) {
+                        _bookMarks!.removeAt(indexOf!);
+                      } else {
+                        _bookMarks!.add(e);
+                        saveEntries();
+                      }
+                    });
+                  },
+                ),
               ),
-            )
-            .toList(),
+              // DataCell(Text(e.fam)),
+            ],
+          );
+        }).toList(),
       ),
     );
   }
-
-  final paddingLTR = 8.0;
-  final paddingB = 18.0;
 
   @override
   Widget build(BuildContext context) {
@@ -154,6 +196,12 @@ class _MyHomePageState extends State<MyHomePage> {
                     textDirection: TextDirection.rtl,
                     controller: inputControler,
                     decoration: InputDecoration(
+                      prefixIcon: IconButton(
+                        onPressed: () => setState(() {
+                          inputControler.clear();
+                        }),
+                        icon: Icon(Icons.clear),
+                      ),
                       hintText: 'اكتب هنا',
                       hintStyle: TextStyle(
                         color: Colors.grey,
@@ -218,8 +266,9 @@ class _MyHomePageState extends State<MyHomePage> {
                               : Icons.light_mode,
                       size: 30,
                     ),
-                    onPressed: () async {
-                      // TODO: Handle when theme changed
+                    onPressed: () {
+                      // TODO: Handle when system theme changed ie. then the
+                      // current theme and systeme is same
                       // var currentBrightness =
                       //     MediaQuery.of(context).platformBrightness;
 
@@ -252,7 +301,82 @@ class _MyHomePageState extends State<MyHomePage> {
                 ],
               ),
             ),
+            ListTile(
+              title: TextButton(
+                child: Text('Bookmarked words'),
+                onPressed: () {
+                  Navigator.pop(context);
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => bookMarkedList()));
+                },
+              ),
+            ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class bookMarkedList extends StatefulWidget {
+  const bookMarkedList({super.key});
+
+  @override
+  State<bookMarkedList> createState() => _bookMarkedListState();
+}
+
+class _bookMarkedListState extends State<bookMarkedList> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Bookmarked Words'),
+      ),
+      body: Padding(
+        padding: EdgeInsets.all(paddingLTR),
+        child: Container(
+          alignment: Alignment.topCenter,
+          child: SingleChildScrollView(
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columnSpacing: 24.0,
+                columns: const [
+                  DataColumn(label: Text('Word')),
+                  DataColumn(label: Text('Definition')),
+                  DataColumn(label: Text('Root')),
+                  DataColumn(label: Text('Bookmark')),
+                  // DataColumn(label: Text('Family')),
+                ],
+                rows: _bookMarks!.map((e) {
+                  final indexOf = _bookMarks!.indexOf(e);
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(e.word)),
+                      DataCell(Text(e.def)),
+                      DataCell(Text(e.root)),
+                      DataCell(
+                        IconButton(
+                          icon: Icon(
+                            Icons.favorite,
+                          ),
+                          color: Colors.red,
+                          onPressed: () {
+                            setState(() {
+                              _bookMarks!.removeAt(indexOf);
+                            });
+                          },
+                        ),
+                      ),
+                      // DataCell(Text(e.fam)),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
+          ),
         ),
       ),
     );
