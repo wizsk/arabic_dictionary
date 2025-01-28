@@ -94,7 +94,7 @@ class _Wooooods extends State<Woooooords> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bookmarked Words'),
+        title: Text('Definitions'),
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
@@ -108,7 +108,7 @@ class _Wooooods extends State<Woooooords> {
         child: b.isEmpty
             ? Center(
                 child: TextButton(
-                  child: Text("No bookmarks. Go Back"),
+                  child: Text("Nothing here. Go Back"),
                   onPressed: () {
                     Navigator.pop(context);
                   },
