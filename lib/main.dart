@@ -2,15 +2,13 @@ import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:arabic_dictionay/pages/bookmarked.dart';
 import 'package:arabic_dictionay/store.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 
 const paddingLTR = 8.0;
 const paddingB = 18.0;
 const fontFam = 'Kitab';
 
-List<Entry>? _currentWord;
 final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
-// when it's value is == 1 then switch to system theme
-int currentThemeSwitchCount = 0;
 
 void main() {
   runApp(const MyApp());
@@ -74,6 +72,12 @@ class _MyHomePageState extends State<MyHomePage> {
   final dict = Dictionary();
   final bkmrk = Bookmark();
 
+  bool _wordSearchMode = true;
+  bool _diableInput = false;
+
+  List<Entry>? _currentWord;
+  List<WordAndEntries>? _wordEntries;
+
   // @override
   // void initState() {
   //   super.initState();
@@ -86,27 +90,75 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _findWords() async {
-    if (inputControler.text.trim().isEmpty) return;
-    dict.findWordAsync(inputControler.text.trim()).then((w) {
-      setState(() {
-        _currentWord = w;
+    final inpt = inputControler.text.trim();
+    if (inpt.isEmpty) return;
+
+    if (!_wordSearchMode) {
+      dict.findWords(inpt).then((v) {
+        setState(() {
+          _diableInput = true;
+          _wordEntries = v;
+        });
       });
-    });
+    } else {
+      dict.findWordAsync(inpt).then((w) {
+        setState(() {
+          _currentWord = w;
+        });
+      });
+    }
   }
 
   Widget _makeWordTable() {
-    if (_currentWord == null) {
+    if (_currentWord == null && _wordEntries == null) {
       return Text(
         'Search for something',
         textAlign: TextAlign.center,
       );
-    } else if (_currentWord!.isEmpty) {
+    } else if (_wordSearchMode && _currentWord!.isEmpty) {
       return Text(
         'No result for: ${inputControler.text}',
         textAlign: TextAlign.center,
       );
     }
 
+    if (!_wordSearchMode && _wordEntries != null) {
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+      return RichText(
+        textAlign: TextAlign.right,
+        textDirection: TextDirection.rtl,
+        text: TextSpan(
+          style: TextStyle(
+            fontFamily: fontFam,
+            color: isDark ? Colors.white : Colors.black,
+            fontSize: 20,
+          ),
+          children: _wordEntries!.map((v) {
+            return TextSpan(
+              text: '${v.word} ',
+              style: TextStyle(
+                color:
+                    !v.isPunctuation && v.entries.isEmpty ? Colors.red : null,
+              ),
+              recognizer: TapGestureRecognizer()
+                ..onTap = () {
+                  if (v.entries.isEmpty) return;
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => Woooooords(
+                        b: v.entries,
+                        bkmr: bkmrk,
+                      ),
+                    ),
+                  ).then((_) => setState(() {})); // rerendering the main page
+                },
+            );
+          }).toList(),
+        ),
+      );
+    }
+    // if it's in wordsearh mode
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       child: DataTable(
@@ -116,7 +168,6 @@ class _MyHomePageState extends State<MyHomePage> {
           DataColumn(label: Text('Definition')),
           DataColumn(label: Text('Root')),
           DataColumn(label: Text('Bookmark')),
-          // DataColumn(label: Text('Family')),
         ],
         rows: _currentWord!.map((e) {
           final indexOf = bkmrk.idx(e);
@@ -173,18 +224,27 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 Expanded(
                   child: TextField(
+                    enabled: !_diableInput,
                     autocorrect: false,
                     onSubmitted: (_) => _findWords(),
+                    maxLines: _wordSearchMode
+                        ? 1
+                        : _diableInput
+                            ? 1
+                            : 4,
                     textAlign: TextAlign.right,
                     textDirection: TextDirection.rtl,
                     controller: inputControler,
                     decoration: InputDecoration(
-                      prefixIcon: IconButton(
-                        onPressed: () => setState(() {
-                          inputControler.clear();
-                        }),
-                        icon: Icon(Icons.clear),
-                      ),
+                      prefixIcon: _diableInput
+                          ? null
+                          : IconButton(
+                              onPressed: () => setState(() {
+                                _diableInput = false;
+                                inputControler.clear();
+                              }),
+                              icon: Icon(Icons.clear),
+                            ),
                       hintText: 'اكتب هنا',
                       hintStyle: TextStyle(
                         color: Colors.grey,
@@ -197,13 +257,23 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 SizedBox(width: 10),
                 IconButton(
-                  onPressed: _findWords,
-                  icon: Icon(Icons.search),
+                  onPressed: () {
+                    if (_diableInput) {
+                      setState(() {
+                        _diableInput = false;
+                      });
+                      return;
+                    }
+                    _findWords();
+                  },
+                  icon: Icon(_diableInput ? Icons.edit : Icons.search),
                   iconSize: 30,
                 ),
               ],
             ),
-            SizedBox(width: 110),
+            SizedBox(
+              width: 110,
+            ),
           ],
         ),
       ),
@@ -227,53 +297,71 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ListTile(
-              leading: Icon(Icons.subject_rounded),
-              title: Text('Choose theme'),
-              onTap: () => showDialog<String>(
-                context: context,
-                builder: (BuildContext context) => AlertDialog(
-                  title: const Text('Theme'),
-                  content: Column(
-                    mainAxisAlignment: MainAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: TextButton(
-                          child: Text('System'),
-                          onPressed: () => setState(() {
-                            currentTheme.value = ThemeMode.system;
-                            Navigator.pop(context);
-                          }),
+              leading: Icon(Icons.eco),
+              title: Text(
+                  'Theme: ${currentTheme.value == ThemeMode.system ? 'System' : currentTheme.value == ThemeMode.dark ? 'Dark' : 'Light'}'),
+              onTap: () {
+                Navigator.pop(context);
+                showDialog<String>(
+                  context: context,
+                  builder: (BuildContext context) => AlertDialog(
+                    title: const Text('Theme'),
+                    content: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: TextButton(
+                            child: Text('System'),
+                            onPressed: () => setState(() {
+                              currentTheme.value = ThemeMode.system;
+                              Navigator.pop(context);
+                            }),
+                          ),
                         ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: TextButton(
-                          child: Text('Light'),
-                          onPressed: () => setState(() {
-                            currentTheme.value = ThemeMode.light;
-                            Navigator.pop(context);
-                          }),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: TextButton(
+                            child: Text('Light'),
+                            onPressed: () => setState(() {
+                              currentTheme.value = ThemeMode.light;
+                              Navigator.pop(context);
+                            }),
+                          ),
                         ),
-                      ),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 50,
-                        child: TextButton(
-                          child: Text('Dark'),
-                          onPressed: () => setState(() {
-                            currentTheme.value = ThemeMode.dark;
-                            Navigator.pop(context);
-                          }),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: TextButton(
+                            child: Text('Dark'),
+                            onPressed: () => setState(() {
+                              currentTheme.value = ThemeMode.dark;
+                              Navigator.pop(context);
+                            }),
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-              ),
+                );
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.text_fields_sharp),
+              title: Text(_wordSearchMode ? 'Word mode' : 'Peragrapth mode'),
+              onTap: () {
+                setState(() {
+                  inputControler.clear();
+                  _wordSearchMode = !_wordSearchMode;
+                  _diableInput = false;
+                  _wordEntries = null;
+                  _currentWord = null;
+                });
+                Navigator.pop(context);
+              },
             ),
             ListTile(
               leading: Icon(Icons.bookmark),

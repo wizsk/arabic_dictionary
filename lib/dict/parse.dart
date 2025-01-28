@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 Future<String> loadString(String path) async {
@@ -6,15 +7,19 @@ Future<String> loadString(String path) async {
   return latin1.decode(data.buffer.asUint8List());
 }
 
-// void main() async {
-//   var x = Dictionary();
-//   // print(x._dictPref);
-//   // print(x._dictStems);
-//   // print(_transliterateRmHarakats("عَملٌ"));
-//   // print(_deTransliterate(_transliterateRmHarakats("عَملٌ")));
-//   // print("foo".substring(0, 1));
-//   print(x.findWord("عمل"));
-// }
+void main() async {
+  // var x = Dictionary();
+  // print(x._dictPref);
+  // print(x._dictStems);
+  // print(_transliterateRmHarakats("عَملٌ"));
+  // print(_deTransliterate(_transliterateRmHarakats("عَملٌ")));
+  // print("foo".substring(0, 1));
+  // print(x.findWord("عمل"));
+  final f = 'عَملٌ';
+  for (final v in uni2buck.entries) {
+    print('k: ${v.key} v: ${v.value}');
+  }
+}
 
 // Define Entry class (similar to the Go struct Entry)
 class Entry {
@@ -74,9 +79,11 @@ class Entry {
 
 class WordAndEntries {
   final String word;
+  final bool isPunctuation;
   final List<Entry> entries;
 
-  WordAndEntries({required this.word, required this.entries});
+  WordAndEntries(
+      {required this.word, required this.isPunctuation, required this.entries});
 
   @override
   String toString() {
@@ -100,11 +107,33 @@ class Dictionary {
   }
 
   Future<List<WordAndEntries>> findWords(String pera) async {
-    return pera.trim().split(' ').map((w) => w.trim()).toList().map((w) {
-      var c = WordAndEntries(word: w, entries: findWord(w));
-      // print('$w, $c');
-      return c;
-    }).toList();
+    List<WordAndEntries> res = [];
+
+    for (final line in pera.trim().split('\n')) {
+      final r = line.trim().split(' ').map((w) => w.trim()).toList().map((w) {
+        // clean word
+        var cw = '';
+        for (int i = 0; i < w.length; i++) {
+          if (uni2buck.containsKey(w[i])) {
+            cw = '$cw${w[i]}';
+          }
+        }
+        var c = WordAndEntries(
+          word: w,
+          isPunctuation: cw.isEmpty,
+          entries: findWord(cw),
+        );
+        return c;
+      }).toList();
+      r.add(WordAndEntries(
+        word: '\n',
+        isPunctuation: true,
+        entries: [],
+      ));
+      res.addAll(r);
+    }
+
+    return res;
   }
 
   Future<List<Entry>> findWordAsync(String word) async => findWord(word);
