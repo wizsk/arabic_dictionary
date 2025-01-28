@@ -8,6 +8,9 @@ const paddingLTR = 8.0;
 const paddingB = 18.0;
 const fontFam = 'Kitab';
 
+const searchWordTEXT = 'Search word';
+const readerModeTEXT = 'Reader Mode';
+
 final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
 
 void main() {
@@ -24,7 +27,7 @@ class MyApp extends StatelessWidget {
         valueListenable: currentTheme,
         builder: (BuildContext context, ThemeMode th, Widget? child) {
           return MaterialApp(
-            title: 'Arabic Dictionary',
+            title: 'Arabic to English Dictionay',
             // TODO: Learn more about theme maybe and improve it :?
             theme: ThemeData(
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
@@ -71,6 +74,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final inputControler = TextEditingController();
   final dict = Dictionary();
   final bkmrk = Bookmark();
+
+  String currentModeAppbarTittle = searchWordTEXT;
 
   bool _wordSearchMode = true;
   bool _diableInput = false;
@@ -206,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text(currentModeAppbarTittle),
       ),
       body: Padding(
         // padding: const EdgeInsets.all(8.0),
@@ -351,9 +356,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             ListTile(
               leading: Icon(Icons.text_fields_sharp),
-              title: Text(_wordSearchMode ? 'Word mode' : 'Peragrapth mode'),
+              title: Text(
+                  'Mode: ${_wordSearchMode ? searchWordTEXT : readerModeTEXT}'),
               onTap: () {
                 setState(() {
+                  currentModeAppbarTittle =
+                      _wordSearchMode ? readerModeTEXT : searchWordTEXT;
                   inputControler.clear();
                   _wordSearchMode = !_wordSearchMode;
                   _diableInput = false;
