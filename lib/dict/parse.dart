@@ -7,20 +7,6 @@ Future<String> loadString(String path) async {
   return latin1.decode(data.buffer.asUint8List());
 }
 
-void main() async {
-  // var x = Dictionary();
-  // print(x._dictPref);
-  // print(x._dictStems);
-  // print(_transliterateRmHarakats("عَملٌ"));
-  // print(_deTransliterate(_transliterateRmHarakats("عَملٌ")));
-  // print("foo".substring(0, 1));
-  // print(x.findWord("عمل"));
-  final f = 'عَملٌ';
-  for (final v in uni2buck.entries) {
-    print('k: ${v.key} v: ${v.value}');
-  }
-}
-
 // Define Entry class (similar to the Go struct Entry)
 class Entry {
   final String root;
