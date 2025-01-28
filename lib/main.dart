@@ -1,27 +1,11 @@
 import 'package:arabic_dictionay/dict/parse.dart';
+import 'package:arabic_dictionay/pages/bookmarked.dart';
+import 'package:arabic_dictionay/store.dart';
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert';
-
-Future<void> saveEntries() async {
-  final prefs = await SharedPreferences.getInstance();
-  await prefs.setString(
-      'entries', jsonEncode(_bookMarks!.map((e) => e.toJson()).toList()));
-}
 
 const paddingLTR = 8.0;
 const paddingB = 18.0;
-
-List<Entry>? _bookMarks;
-Future<void> loadEntriesToBookMark() async {
-  final prefs = await SharedPreferences.getInstance();
-  final entriesJson = prefs.getString('entries');
-  if (entriesJson == null) _bookMarks = [];
-
-  _bookMarks = (jsonDecode(entriesJson!) as List)
-      .map((json) => Entry.fromJson(json))
-      .toList();
-}
+const fontFam = 'Kitab';
 
 List<Entry>? _currentWord;
 final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
@@ -29,7 +13,6 @@ final currentTheme = ValueNotifier<ThemeMode>(ThemeMode.system);
 int currentThemeSwitchCount = 0;
 
 void main() {
-  loadEntriesToBookMark();
   runApp(const MyApp());
 }
 
@@ -49,7 +32,7 @@ class MyApp extends StatelessWidget {
               colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
               textTheme: Theme.of(context).textTheme.apply(
-                    fontFamily: 'Amiri',
+                    fontFamily: fontFam,
                     fontSizeFactor: 1.1,
                     fontSizeDelta: 2.0,
                     bodyColor: null,
@@ -61,7 +44,7 @@ class MyApp extends StatelessWidget {
               primaryColor: Colors.white,
               useMaterial3: true,
               textTheme: Theme.of(context).textTheme.apply(
-                    fontFamily: 'Amiri',
+                    fontFamily: fontFam,
                     fontSizeFactor: 1.1,
                     fontSizeDelta: 2.0,
                     bodyColor: Colors.white,
@@ -89,6 +72,12 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   final inputControler = TextEditingController();
   final dict = Dictionary();
+  final bkmrk = Bookmark();
+
+  // @override
+  // void initState() {
+  //   super.initState();
+  // }
 
   @override
   void dispose() {
@@ -130,7 +119,7 @@ class _MyHomePageState extends State<MyHomePage> {
           // DataColumn(label: Text('Family')),
         ],
         rows: _currentWord!.map((e) {
-          final indexOf = _bookMarks?.indexOf(e);
+          final indexOf = bkmrk.idx(e);
           return DataRow(
             cells: [
               DataCell(Text(e.word)),
@@ -139,21 +128,15 @@ class _MyHomePageState extends State<MyHomePage> {
               DataCell(
                 IconButton(
                   icon: Icon(
-                    indexOf != null && indexOf > -1
-                        ? Icons.favorite
-                        : Icons.favorite_border,
+                    indexOf > -1 ? Icons.favorite : Icons.favorite_border,
                   ),
                   color: Colors.red,
                   onPressed: () {
-                    if (_bookMarks == null) {
-                      return;
-                    }
                     setState(() {
-                      if (indexOf != null && indexOf! > -1) {
-                        _bookMarks!.removeAt(indexOf!);
+                      if (indexOf > -1) {
+                        bkmrk.rmAt(indexOf);
                       } else {
-                        _bookMarks!.add(e);
-                        saveEntries();
+                        bkmrk.add(e);
                       }
                     });
                   },
@@ -244,139 +227,68 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             ListTile(
-              title: Row(
-                children: [
-                  Text('Theme:'),
-                  SizedBox(
-                    width: 10,
+              leading: Icon(Icons.subject_rounded),
+              title: Text('Choose theme'),
+              onTap: () => showDialog<String>(
+                context: context,
+                builder: (BuildContext context) => AlertDialog(
+                  title: const Text('Theme'),
+                  content: Column(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: TextButton(
+                          child: Text('System'),
+                          onPressed: () => setState(() {
+                            currentTheme.value = ThemeMode.system;
+                            Navigator.pop(context);
+                          }),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: TextButton(
+                          child: Text('Light'),
+                          onPressed: () => setState(() {
+                            currentTheme.value = ThemeMode.light;
+                            Navigator.pop(context);
+                          }),
+                        ),
+                      ),
+                      SizedBox(
+                        width: double.infinity,
+                        height: 50,
+                        child: TextButton(
+                          child: Text('Dark'),
+                          onPressed: () => setState(() {
+                            currentTheme.value = ThemeMode.dark;
+                            Navigator.pop(context);
+                          }),
+                        ),
+                      ),
+                    ],
                   ),
-                  TextButton.icon(
-                    label: Text(
-                      currentTheme.value == ThemeMode.system
-                          ? 'System'
-                          : currentTheme.value == ThemeMode.dark
-                              ? 'Dark'
-                              : 'Light',
-                    ),
-                    icon: Icon(
-                      currentTheme.value == ThemeMode.system
-                          ? Icons.contrast
-                          : currentTheme.value == ThemeMode.dark
-                              ? Icons.dark_mode
-                              : Icons.light_mode,
-                      size: 30,
-                    ),
-                    onPressed: () {
-                      // TODO: Handle when system theme changed ie. then the
-                      // current theme and systeme is same
-                      // var currentBrightness =
-                      //     MediaQuery.of(context).platformBrightness;
-
-                      if (currentTheme.value == ThemeMode.system) {
-                        if (Theme.of(context).brightness == Brightness.dark) {
-                          currentTheme.value = ThemeMode.light;
-                        } else {
-                          currentTheme.value = ThemeMode.dark;
-                        }
-                        currentThemeSwitchCount++;
-                      } else if (currentTheme.value == ThemeMode.light) {
-                        if (currentThemeSwitchCount == 1) {
-                          currentTheme.value = ThemeMode.system;
-                          currentThemeSwitchCount = 0;
-                        } else {
-                          currentTheme.value = ThemeMode.dark;
-                          currentThemeSwitchCount++;
-                        }
-                      } else {
-                        if (currentThemeSwitchCount == 1) {
-                          currentTheme.value = ThemeMode.system;
-                          currentThemeSwitchCount = 0;
-                        } else {
-                          currentTheme.value = ThemeMode.light;
-                          currentThemeSwitchCount++;
-                        }
-                      }
-                    },
-                  )
-                ],
+                ),
               ),
             ),
             ListTile(
-              title: TextButton(
-                child: Text('Bookmarked words'),
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                          builder: (context) => bookMarkedList()));
-                },
-              ),
+              leading: Icon(Icons.bookmark),
+              title: Text('Bookmarked words'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => BookMarkedList(b: bkmrk),
+                  ),
+                ).then((_) => setState(() {})); // rerendering the main page
+              },
             ),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class bookMarkedList extends StatefulWidget {
-  const bookMarkedList({super.key});
-
-  @override
-  State<bookMarkedList> createState() => _bookMarkedListState();
-}
-
-class _bookMarkedListState extends State<bookMarkedList> {
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Bookmarked Words'),
-      ),
-      body: Padding(
-        padding: EdgeInsets.all(paddingLTR),
-        child: Container(
-          alignment: Alignment.topCenter,
-          child: SingleChildScrollView(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columnSpacing: 24.0,
-                columns: const [
-                  DataColumn(label: Text('Word')),
-                  DataColumn(label: Text('Definition')),
-                  DataColumn(label: Text('Root')),
-                  DataColumn(label: Text('Bookmark')),
-                  // DataColumn(label: Text('Family')),
-                ],
-                rows: _bookMarks!.map((e) {
-                  final indexOf = _bookMarks!.indexOf(e);
-                  return DataRow(
-                    cells: [
-                      DataCell(Text(e.word)),
-                      DataCell(Text(e.def)),
-                      DataCell(Text(e.root)),
-                      DataCell(
-                        IconButton(
-                          icon: Icon(
-                            Icons.favorite,
-                          ),
-                          color: Colors.red,
-                          onPressed: () {
-                            setState(() {
-                              _bookMarks!.removeAt(indexOf);
-                            });
-                          },
-                        ),
-                      ),
-                      // DataCell(Text(e.fam)),
-                    ],
-                  );
-                }).toList(),
-              ),
-            ),
-          ),
         ),
       ),
     );
