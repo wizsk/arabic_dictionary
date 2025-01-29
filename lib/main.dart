@@ -109,6 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
       Set<String> uniqueWords = {};
       for (var w in inputControler.text.trim().split(' ')) {
         w = w.trim();
+        w = dict.cleanWord(w);
         if (w.isEmpty) continue;
         uniqueWords.add(w);
       }
@@ -125,7 +126,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget _makeWordTable() {
     if (_currentWord == null && _wordEntries == null) {
       return Text(
-        'Search for something',
+        _wordSearchMode ? 'Search for something' : '',
         textAlign: TextAlign.center,
       );
     } else if (_wordSearchMode && _currentWord!.isEmpty) {
@@ -226,6 +227,9 @@ class _MyHomePageState extends State<MyHomePage> {
         padding:
             EdgeInsets.fromLTRB(paddingLTR, paddingLTR, paddingLTR, paddingB),
         child: Column(
+          crossAxisAlignment: _wordSearchMode
+              ? CrossAxisAlignment.center
+              : CrossAxisAlignment.end,
           children: <Widget>[
             Expanded(
               child: SingleChildScrollView(

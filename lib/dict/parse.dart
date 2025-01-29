@@ -91,18 +91,26 @@ class Dictionary {
     loadData();
   }
 
+  // removes all the char other than arabic!
+  String cleanWord(String w) {
+    if (w.isEmpty) return '';
+
+    var cw = '';
+    for (int i = 0; i < w.length; i++) {
+      if (uni2buck.containsKey(w[i])) {
+        cw = '$cw${w[i]}';
+      }
+    }
+    return cw;
+  }
+
   Future<List<WordAndEntries>> findWords(String pera) async {
     List<WordAndEntries> res = [];
 
     for (final line in pera.trim().split('\n')) {
       final r = line.trim().split(' ').map((w) => w.trim()).toList().map((w) {
         // clean word
-        var cw = '';
-        for (int i = 0; i < w.length; i++) {
-          if (uni2buck.containsKey(w[i])) {
-            cw = '$cw${w[i]}';
-          }
-        }
+        var cw = cleanWord(w);
         var c = WordAndEntries(
           word: w,
           isPunctuation: cw.isEmpty,
@@ -338,7 +346,7 @@ Map<String, String> buck2uni = {
   'Z': String.fromCharCode(0x0638), // Zaa' (DHaa')
   'E': String.fromCharCode(0x0639), // cayn
   'g': String.fromCharCode(0x063A), // ghayn
-  '_': String.fromCharCode(0x0640), // taTwiil
+  // '_': String.fromCharCode(0x0640), // taTwiil 'ـ' we don't need this!
   'f': String.fromCharCode(0x0641), // faa'
   'q': String.fromCharCode(0x0642), // qaaf
   'k': String.fromCharCode(0x0643), // kaaf
