@@ -1,4 +1,4 @@
-<p align="center"><img src="./assets/icons/icon.png" width="150" style="border-radius: 100%;"></p> 
+<p align="center"><a src="https://github.com/wizsk/arabic_dictionary/releases/latest"><img src="./assets/icons/icon.png" width="150" style="border-radius: 100%;"></a></p>
 
 <h4 align="center">A libre lightweight Arabic to English dictionary app.</h4>
 
