@@ -106,10 +106,18 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       });
     } else {
-      dict.findWordAsync(inpt).then((w) {
-        setState(() {
-          _currentWord = w;
-        });
+      Set<String> uniqueWords = {};
+      for (var w in inputControler.text.trim().split(' ')) {
+        w = w.trim();
+        if (w.isEmpty) continue;
+        uniqueWords.add(w);
+      }
+
+      setState(() {
+        _currentWord = [];
+        for (final w in uniqueWords) {
+          _currentWord!.addAll(dict.findWord(w));
+        }
       });
     }
   }
