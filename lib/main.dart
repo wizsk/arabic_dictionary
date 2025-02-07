@@ -244,6 +244,9 @@ class _MyHomePageState extends State<MyHomePage> {
                     enabled: !_diableInput,
                     autocorrect: false,
                     onSubmitted: (_) => _findWords(),
+                    onChanged: (_) {
+                      if (_wordSearchMode) _findWords();
+                    },
                     maxLines: _wordSearchMode
                         ? 1
                         : _diableInput
