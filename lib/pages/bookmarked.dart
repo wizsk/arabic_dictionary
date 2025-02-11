@@ -150,14 +150,30 @@ class _Wooooods extends State<Woooooords> {
                                 ),
                                 color: Colors.red,
                                 onPressed: () {
-                                  setState(() {
-                                    if (idx > -1) {
-                                      widget.bkmr.rmAt(idx);
-                                    } else {
-                                      widget.bkmr.add(e);
-                                    }
-                                    // b.rmAt(indexOf);
-                                  });
+                                  final w = e.word;
+                                  final scaffoldMessenger =
+                                      ScaffoldMessenger.of(context);
+                                  if (idx > -1) {
+                                    widget.bkmr.rmAt(idx).then((_) {
+                                      if (!mounted) return;
+                                      scaffoldMessenger.clearSnackBars();
+                                      scaffoldMessenger.showSnackBar(SnackBar(
+                                        content:
+                                            Text('Removed $w from bookmakrs'),
+                                        duration: Duration(milliseconds: 400),
+                                      ));
+                                    });
+                                  } else {
+                                    widget.bkmr.add(e).then((_) {
+                                      if (!mounted) return;
+                                      scaffoldMessenger.clearSnackBars();
+                                      scaffoldMessenger.showSnackBar(SnackBar(
+                                        content: Text('Added $w to bookmakrs'),
+                                        duration: Duration(milliseconds: 400),
+                                      ));
+                                    });
+                                  }
+                                  setState(() {});
                                 },
                               ),
                             ),
