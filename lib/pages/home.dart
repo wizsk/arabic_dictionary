@@ -24,11 +24,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void _findWords() async {
     if (inputControler.text.trim().isEmpty) return;
-    dict.findWordAsync(inputControler.text.trim()).then((w) {
-      setState(() {
-        _currentWord = w;
-      });
-    });
+    // dict.findWordAsync(inputControler.text.trim()).then((w) {
+    //   setState(() {
+    //     _currentWord = w;
+    //   });
+    // });
   }
 
   Widget _makeWordTable() {

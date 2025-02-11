@@ -79,9 +79,16 @@ class _BookMarkedListState extends State<BookMarkedList> {
 }
 
 class Woooooords extends StatefulWidget {
-  const Woooooords({super.key, required this.b, required this.bkmr});
   final List<Entry> b;
   final Bookmark bkmr;
+  final String cw; // current word
+
+  const Woooooords({
+    super.key,
+    required this.cw,
+    required this.b,
+    required this.bkmr,
+  });
 
   @override
   State<Woooooords> createState() => _Wooooods();
@@ -98,7 +105,6 @@ class _Wooooods extends State<Woooooords> {
         leading: IconButton(
           onPressed: () {
             Navigator.pop(context);
-            FocusScope.of(context).unfocus();
           },
           icon: Icon(Icons.arrow_back),
         ),
@@ -108,7 +114,7 @@ class _Wooooods extends State<Woooooords> {
         child: b.isEmpty
             ? Center(
                 child: TextButton(
-                  child: Text("Nothing here. Go Back"),
+                  child: Text("No deffition found for: ${widget.cw}"),
                   onPressed: () {
                     Navigator.pop(context);
                   },

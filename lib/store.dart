@@ -12,17 +12,17 @@ class Bookmark {
 
   int idx(Entry e) => bookmarks.indexOf(e);
 
-  void add(Entry e) async {
+  Future<void> add(Entry e) async {
     bookmarks.add(e);
     await _saveBookmarksToFile(bookmarks);
   }
 
-  void rm(Entry e) async {
+  Future<void> rm(Entry e) async {
     bookmarks.remove(e);
     await _saveBookmarksToFile(bookmarks);
   }
 
-  void rmAt(int e) async {
+  Future<void> rmAt(int e) async {
     bookmarks.removeAt(e);
     await _saveBookmarksToFile(bookmarks);
   }
@@ -43,12 +43,12 @@ class Bookmark {
   Future<List<Entry>> _loadBookmarksFromFile() async {
     final b = await _localBookmarkFile;
     if (!await b.exists()) {
-      print('bookmarks does not exist!: ${b.path}');
+      // print('bookmarks does not exist!: ${b.path}');
       return [];
     }
 
     final data = await b.readAsString();
-    print('bookmarks loaded!: ${b.path}');
+    // print('bookmarks loaded!: ${b.path}');
 
     if (data.isEmpty) return [];
 

@@ -104,39 +104,14 @@ class Dictionary {
     return cw;
   }
 
-  Future<List<WordAndEntries>> findWords(String pera) async {
-    List<WordAndEntries> res = [];
-
-    for (final line in pera.trim().split('\n')) {
-      final r = line.trim().split(' ').map((w) => w.trim()).toList().map((w) {
-        // clean word
-        var cw = cleanWord(w);
-        var c = WordAndEntries(
-          word: w,
-          isPunctuation: cw.isEmpty,
-          entries: findWord(cw),
-        );
-        return c;
-      }).toList();
-      r.add(WordAndEntries(
-        word: '\n',
-        isPunctuation: true,
-        entries: [],
-      ));
-      res.addAll(r);
-    }
-
-    return res;
-  }
-
-  Future<List<Entry>> findWordAsync(String word) async => findWord(word);
-
   // Method to find word
   List<Entry> findWord(String word) {
     if (word.isEmpty) return [];
-    List<Entry> res = [];
-    String w = _transliterateRmHarakats(word);
+    var w = cleanWord(word);
+    if (w.isEmpty) return [];
 
+    List<Entry> res = [];
+    w = _transliterateRmHarakats(word);
     for (int i = 0; i < w.length; i++) {
       for (int j = i + 1; j <= w.length; j++) {
         // var c = dict(rSlice(w, 0, i), rSlice(w, i, j), rSlice(w, j, w.length));
@@ -146,11 +121,6 @@ class Dictionary {
       }
     }
     return res;
-  }
-
-  // Helper function to slice a list of runes (characters)
-  String rSlice(List<int> r, int start, int end) {
-    return String.fromCharCodes(r.sublist(start, end));
   }
 
   // Main dictionary search function

@@ -1,8 +1,8 @@
+import 'package:arabic_dictionay/clicable_text.dart';
 import 'package:arabic_dictionay/dict/parse.dart';
 import 'package:arabic_dictionay/pages/bookmarked.dart';
 import 'package:arabic_dictionay/store.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/gestures.dart';
 
 const paddingLTR = 8.0;
 const paddingB = 18.0;
@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
             title: 'Arabic to English Dictionay',
             // TODO: Learn more about theme maybe and improve it :?
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+              // colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
               useMaterial3: true,
               textTheme: Theme.of(context).textTheme.apply(
                     fontFamily: fontFam,
@@ -80,9 +80,6 @@ class _MyHomePageState extends State<MyHomePage> {
   bool _wordSearchMode = true;
   bool _diableInput = false;
 
-  List<Entry>? _currentWord;
-  List<WordAndEntries>? _wordEntries;
-
   // @override
   // void initState() {
   //   super.initState();
@@ -94,84 +91,62 @@ class _MyHomePageState extends State<MyHomePage> {
     super.dispose();
   }
 
-  void _findWords() async {
-    final inpt = inputControler.text.trim();
-    if (inpt.isEmpty) return;
-
-    if (!_wordSearchMode) {
-      dict.findWords(inpt).then((v) {
-        setState(() {
-          _diableInput = true;
-          _wordEntries = v;
-        });
-      });
-    } else {
-      Set<String> uniqueWords = {};
-      for (var w in inputControler.text.trim().split(' ')) {
-        w = w.trim();
-        w = dict.cleanWord(w);
-        if (w.isEmpty) continue;
-        uniqueWords.add(w);
-      }
-
-      setState(() {
-        _currentWord = [];
-        for (final w in uniqueWords) {
-          _currentWord!.addAll(dict.findWord(w));
-        }
-      });
-    }
-  }
-
   Widget _makeWordTable() {
-    if (_currentWord == null && _wordEntries == null) {
+    final inTxt = inputControler.text.trim();
+    if (inTxt.isEmpty) {
       return Text(
         _wordSearchMode ? 'Search for something' : '',
         textAlign: TextAlign.center,
       );
-    } else if (_wordSearchMode && _currentWord!.isEmpty) {
-      return Text(
-        'No result for: ${inputControler.text}',
-        textAlign: TextAlign.center,
-      );
     }
 
-    if (!_wordSearchMode && _wordEntries != null) {
+    if (!_wordSearchMode) {
       final isDark = Theme.of(context).brightness == Brightness.dark;
-      return RichText(
-        textAlign: TextAlign.right,
-        textDirection: TextDirection.rtl,
-        text: TextSpan(
+      return ClickableText(
+          text: inTxt,
           style: TextStyle(
             fontFamily: fontFam,
             color: isDark ? Colors.white : Colors.black,
             fontSize: 20,
           ),
-          children: _wordEntries!.map((v) {
-            return TextSpan(
-              text: '${v.word} ',
-              style: TextStyle(
-                color:
-                    !v.isPunctuation && v.entries.isEmpty ? Colors.red : null,
+          onWordTap: (ww) {
+            final w = ww.trim();
+            if (w.isEmpty) {
+              // handle
+              return;
+            }
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => Woooooords(
+                  cw: w,
+                  b: dict.findWord(w),
+                  bkmr: bkmrk,
+                ),
               ),
-              recognizer: TapGestureRecognizer()
-                ..onTap = () {
-                  if (v.entries.isEmpty) return;
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => Woooooords(
-                        b: v.entries,
-                        bkmr: bkmrk,
-                      ),
-                    ),
-                  ).then((_) => setState(() {})); // rerendering the main page
-                },
-            );
-          }).toList(),
-        ),
+            ); //.then((_) => setState(() {})); // rerendering the main page
+          });
+    }
+
+    Set<String> uniqueWords = {};
+    for (var w in inTxt.split(' ')) {
+      w = w.trim();
+      w = dict.cleanWord(w);
+      if (w.isEmpty) continue;
+      uniqueWords.add(w);
+    }
+
+    List<Entry> entries = [];
+    for (final w in uniqueWords) {
+      entries.addAll(dict.findWord(w));
+    }
+
+    if (entries.isEmpty) {
+      return Center(
+        child: Text('Nothing found for: $inTxt'),
       );
     }
+
     // if it's in wordsearh mode
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
@@ -183,7 +158,7 @@ class _MyHomePageState extends State<MyHomePage> {
           DataColumn(label: Text('Root')),
           DataColumn(label: Text('Bookmark')),
         ],
-        rows: _currentWord!.map((e) {
+        rows: entries.map((e) {
           final indexOf = bkmrk.idx(e);
           return DataRow(
             cells: [
@@ -197,17 +172,31 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   color: Colors.red,
                   onPressed: () {
-                    setState(() {
-                      if (indexOf > -1) {
-                        bkmrk.rmAt(indexOf);
-                      } else {
-                        bkmrk.add(e);
-                      }
-                    });
+                    final w = e.word;
+                    final scaffoldMessenger = ScaffoldMessenger.of(context);
+                    if (indexOf > -1) {
+                      bkmrk.rmAt(indexOf).then((_) {
+                        if (!mounted) return;
+                        scaffoldMessenger.clearSnackBars();
+                        scaffoldMessenger.showSnackBar(SnackBar(
+                          content: Text('Removed $w from bookmakrs'),
+                          duration: Duration(milliseconds: 400),
+                        ));
+                      });
+                    } else {
+                      bkmrk.add(e).then((_) {
+                        if (!mounted) return;
+                        scaffoldMessenger.clearSnackBars();
+                        scaffoldMessenger.showSnackBar(SnackBar(
+                          content: Text('Added $w to bookmakrs'),
+                          duration: Duration(milliseconds: 400),
+                        ));
+                      });
+                    }
+                    setState(() {});
                   },
                 ),
               ),
-              // DataCell(Text(e.fam)),
             ],
           );
         }).toList(),
@@ -243,9 +232,10 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: TextField(
                     enabled: !_diableInput,
                     autocorrect: false,
-                    onSubmitted: (_) => _findWords(),
-                    onChanged: (_) {
-                      if (_wordSearchMode) _findWords();
+                    onChanged: (w) {
+                      if (_wordSearchMode && w.trim().isNotEmpty) {
+                        setState(() {});
+                      }
                     },
                     maxLines: _wordSearchMode
                         ? 1
@@ -278,13 +268,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 SizedBox(width: 10),
                 IconButton(
                   onPressed: () {
-                    if (_diableInput) {
-                      setState(() {
-                        _diableInput = false;
-                      });
-                      return;
+                    if (!_wordSearchMode) {
+                      _diableInput = !_diableInput;
+                      setState(() {});
                     }
-                    _findWords();
                   },
                   icon: Icon(_diableInput ? Icons.edit : Icons.search),
                   iconSize: 30,
@@ -380,8 +367,6 @@ class _MyHomePageState extends State<MyHomePage> {
                   inputControler.clear();
                   _wordSearchMode = !_wordSearchMode;
                   _diableInput = false;
-                  _wordEntries = null;
-                  _currentWord = null;
                 });
                 Navigator.pop(context);
               },
