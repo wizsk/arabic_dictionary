@@ -45,7 +45,7 @@ class _BookMarkedListState extends State<BookMarkedList> {
                         // DataColumn(label: Text('Family')),
                       ],
                       rows: b.bookmarks.indexed.map((en) {
-                        final indexOf = en.$1;
+                        final idx = en.$1;
                         final e = en.$2;
                         return DataRow(
                           cells: [
@@ -59,9 +59,19 @@ class _BookMarkedListState extends State<BookMarkedList> {
                                 ),
                                 color: Colors.red,
                                 onPressed: () {
-                                  setState(() {
-                                    b.rmAt(indexOf);
+                                  final w = e.word;
+                                  final scaffoldMessenger =
+                                      ScaffoldMessenger.of(context);
+                                  b.rmAt(idx).then((_) {
+                                    if (!mounted) return;
+                                    scaffoldMessenger.clearSnackBars();
+                                    scaffoldMessenger.showSnackBar(SnackBar(
+                                      content:
+                                          Text('Removed $w from bookmakrs'),
+                                      duration: Duration(milliseconds: 400),
+                                    ));
                                   });
+                                  setState(() {});
                                 },
                               ),
                             ),
