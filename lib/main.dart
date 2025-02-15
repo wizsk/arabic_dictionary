@@ -138,7 +138,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     List<Entry> entries = [];
     for (final w in uniqueWords) {
-      entries.addAll(dict.findWord(w));
+      entries.addAll(dict.findCleanedWord(w));
     }
 
     if (entries.isEmpty) {

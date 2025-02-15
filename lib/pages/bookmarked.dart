@@ -123,8 +123,9 @@ class _Wooooods extends State<Woooooords> {
         padding: EdgeInsets.all(8),
         child: b.isEmpty
             ? Center(
-                child: TextButton(
-                  child: Text("No deffition found for: ${widget.cw}"),
+                child: TextButton.icon(
+                  label: Text("No deffition found for: ${widget.cw}"),
+                  icon: Icon(Icons.arrow_back),
                   onPressed: () {
                     Navigator.pop(context);
                   },

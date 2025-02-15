@@ -104,14 +104,10 @@ class Dictionary {
     return cw;
   }
 
-  // Method to find word
-  List<Entry> findWord(String word) {
-    if (word.isEmpty) return [];
-    var w = cleanWord(word);
-    if (w.isEmpty) return [];
-
+  // words htat has thier non arabic char removed
+  List<Entry> findCleanedWord(String w) {
     List<Entry> res = [];
-    w = _transliterateRmHarakats(word);
+    w = _transliterateRmHarakats(w);
     for (int i = 0; i < w.length; i++) {
       for (int j = i + 1; j <= w.length; j++) {
         // var c = dict(rSlice(w, 0, i), rSlice(w, i, j), rSlice(w, j, w.length));
@@ -121,6 +117,14 @@ class Dictionary {
       }
     }
     return res;
+  }
+
+  // Method to find word
+  List<Entry> findWord(String word) {
+    if (word.isEmpty) return [];
+    var w = cleanWord(word);
+    if (w.isEmpty) return [];
+    return findCleanedWord(w);
   }
 
   // Main dictionary search function
